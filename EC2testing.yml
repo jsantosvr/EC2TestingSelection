@@ -1,0 +1,53 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >-
+  Cloud Formation Template to allow for selection of various sizes of EC2
+  instances
+Parameters:
+
+  SubnetId:
+    Description: my testing subnetID
+    Type: AWS::EC2::Subnet::Id
+  myVPC:
+    Description: My testing vpc
+    Type: AWS::EC2::VPC::Id
+  KeyName:
+    Description: Name of an existing EC2 KeyPair to enable SSH access to the instance
+    Type: AWS::EC2::KeyPair::KeyName
+    ConstraintDescription: must be the name of an existing EC2 KeyPair.
+Resources:
+  MyInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      KeyName: !Ref 'KeyName'
+      SubnetId: subnet-0cc5c399dbddd3d5e
+      SecurityGroupIds:
+      - !Ref 'InstanceSecurityGroup'
+      UserData:
+        Fn::Base64: !Sub |
+          echo "hello world"
+      InstanceType: t2.small
+      AvailabilityZone: us-east-2b
+      ImageId: ami-089c6f2e3866f0f14
+      Tags:
+        -
+          Key: Name
+          Value: !Join ['-', [!Ref AWS::Region, Instance, 'jacob']]
+  InstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+        GroupDescription: Allow http to client host
+        VpcId: !Ref myVPC
+        SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+        SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+        Tags:
+        -
+          Key: Name
+          Value: !Join ['-', [!Ref AWS::Region, SecurityGroup, Jacob]]
