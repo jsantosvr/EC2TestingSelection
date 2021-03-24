@@ -25,17 +25,17 @@ Parameters:
   AvailabilityZone1:
     Description: The first availability zone in the region
     Type: AWS::EC2::AvailabilityZone::Name
-    Default: us-east-2b
+    Default: us-east-1
     ConstraintDescription: Must be a valid availability zone
 
 Mappings: 
   RegionAndInstanceTypeToAMIID: 
       us-east-1: 
-        dev: 'ami-089c6f2e3866f0f14'
-        prod: 'ami-089c6f2e3866f0f14'
-      us-east-2: 
-        dev: 'ami-089c6f2e3866f0f14'
-        prod: 'ami-089c6f2e3866f0f14'
+        dev: 'ami-0022c769'
+        prod: 'ami-0022c769'
+      # us-east-2: 
+      #   dev: 'ami-089c6f2e3866f0f14'
+      #   prod: 'ami-089c6f2e3866f0f14'
 Conditions:
   Prod: 
     !Equals
@@ -54,7 +54,7 @@ Resources:
       UserData:
         Fn::Base64: !Sub |
           echo "hello world"
-      InstanceType: t2.small
+      InstanceType: m1.small
       AvailabilityZone: !Ref AvailabilityZone1
       #us-east-2b
       ImageId: !FindInMap [RegionAndInstanceTypeToAMIID, !Ref "AWS::Region", !Ref Environment]
