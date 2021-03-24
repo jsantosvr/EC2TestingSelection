@@ -41,6 +41,7 @@ Conditions:
     !Equals
         - !Ref Environment  
         - prod 
+#small change for github testing
 Resources:
   MyInstance:
     Type: AWS::EC2::Instance
