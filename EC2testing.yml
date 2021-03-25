@@ -11,52 +11,52 @@ Parameters:
       - dev
       - qa
       - prod
-  SubnetId:
-    Description: my testing subnetID
-    Type: AWS::EC2::Subnet::Id
-    Default: subnet-0cc5c399dbddd3d5e
-  myVPC:
-    Description: My testing vpc
-    Type: AWS::EC2::VPC::Id
-  KeyName:
-    Description: Name of an existing EC2 KeyPair to enable SSH access to the instance
-    Type: AWS::EC2::KeyPair::KeyName
-    ConstraintDescription: must be the name of an existing EC2 KeyPair.
-  AvailabilityZone1:
-    Description: The first availability zone in the region
-    Type: AWS::EC2::AvailabilityZone::Name
-    Default: us-east-1
-    ConstraintDescription: Must be a valid availability zone
+  # SubnetId:
+  #   Description: my testing subnetID
+  #   Type: AWS::EC2::Subnet::Id
+  #   Default: subnet-0cc5c399dbddd3d5e
+  # myVPC:
+  #   Description: My testing vpc
+  #   Type: AWS::EC2::VPC::Id
+  # KeyName:
+  #   Description: Name of an existing EC2 KeyPair to enable SSH access to the instance
+  #   Type: AWS::EC2::KeyPair::KeyName
+  #   ConstraintDescription: must be the name of an existing EC2 KeyPair.
+  # AvailabilityZone1:
+  #   Description: The first availability zone in the region
+  #   Type: AWS::EC2::AvailabilityZone::Name
+  #   Default: us-east-1
+  #   ConstraintDescription: Must be a valid availability zone
 
 Mappings: 
   EC2Details:
     CommonDetails:
-      #VPC: 
-      Name: 'filler testing name'
-      #!Join ['-', [!Ref AWS::Region, Instance, 'jacob']]
+      VPC: vpc-0b418e1163d8c731a 
+      InstanceType: m1.small
+     
 
 
     dev:
-      AvailabilityZone: us-east-1
+      AMI: 'ami-0022c769'
+      AvailabilityZone: us-east-1c
       #InstanceType:
       KeyName: JacobDevKey
-      KeyId: ea3666be-9460-47a6-84c2-58638bdbae52
-      #SubnetId:
+      SubnetId: subnet-0806e3cb96c2d0214
       #SecurityGroupIds:
       
     prod:
-      AvailabilityZone: us-east-1
+      AMI: 'ami-0022c769'
+      AvailabilityZone: us-east-1b
       #InstanceType:
       KeyName: JacobProdKey
-      KeyId: cfea61f1-38e9-4e43-9557-aa562a701aba
-      #SubnetId:
+      SubnetId: subnet-00325a73053958f94
       #SecurityGroupIds:
     qa:
-      AvailabilityZone: us-east-1
+      AMI: 'ami-0022c769'
+      AvailabilityZone: us-east-1a
       #InstanceType:
       KeyName: JacobQaKey
-      KeyId: b76c6a3f-535f-40d5-b3af-3f07ac8a3b09
-      #SubnetId:
+      SubnetId: subnet-0b2361ab4c1147b05
       #SecurityGroupIds:
 
 
@@ -74,13 +74,13 @@ Resources:
     Type: AWS::EC2::Instance
     Properties:
       #change these to !FindInMap
-      KeyName: !FindInMap ['EC2Details', !Ref Environment, !Ref KeyName]
-      SubnetId: !Ref SubnetId
+      KeyName: !FindInMap ['EC2Details', !Ref Environment, 'KeyName']
+      SubnetId: !FindInMap ['EC2Details', !Ref Environment, 'SubnetId']
       SecurityGroupIds:
       - !Ref 'InstanceSecurityGroup'
-      InstanceType: m1.small
-      AvailabilityZone: !Ref AvailabilityZone1
-      ImageId: !FindInMap [RegionAndInstanceTypeToAMIID, !Ref "AWS::Region", !Ref Environment]
+      InstanceType: !FindInMap ['EC2Details', 'CommonDetails', 'InstanceType']
+      AvailabilityZone: !FindInMap ['EC2Details', !Ref Environment, 'AvailabilityZone']
+      ImageId: !FindInMap ['EC2Details', !Ref Environment, 'AMI']
       #is in
       UserData: 
         Fn::Base64:
@@ -93,12 +93,12 @@ Resources:
       Tags:
         -
           Key: Name
-          Value: !FindInMap ['EC2Details', 'CommonDetails', 'Name']
+          Value: !Join ['-', [!Ref AWS::Region, Instance, 'jacob']]
   InstanceSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
         GroupDescription: Allow http to client host
-        VpcId: !Ref myVPC
+        VpcId: !FindInMap ['EC2Details', 'CommonDetails', 'VPC']
         SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 22
