@@ -29,49 +29,71 @@ Parameters:
     ConstraintDescription: Must be a valid availability zone
 
 Mappings: 
+  EC2Details:
+    CommonDetails:
+      #VPC: 
+      Name: 'filler testing name'
+      #!Join ['-', [!Ref AWS::Region, Instance, 'jacob']]
+
+
+    dev:
+      AvailabilityZone: us-east-1
+      #InstanceType:
+      KeyName: JacobDevKey
+      KeyId: ea3666be-9460-47a6-84c2-58638bdbae52
+      #SubnetId:
+      #SecurityGroupIds:
+      
+    prod:
+      AvailabilityZone: us-east-1
+      #InstanceType:
+      KeyName: JacobProdKey
+      KeyId: cfea61f1-38e9-4e43-9557-aa562a701aba
+      #SubnetId:
+      #SecurityGroupIds:
+    qa:
+      AvailabilityZone: us-east-1
+      #InstanceType:
+      KeyName: JacobQaKey
+      KeyId: b76c6a3f-535f-40d5-b3af-3f07ac8a3b09
+      #SubnetId:
+      #SecurityGroupIds:
+
+
   RegionAndInstanceTypeToAMIID: 
       us-east-1: 
         dev: 'ami-0022c769'
         prod: 'ami-0022c769'
-      # us-east-2: 
-      #   dev: 'ami-089c6f2e3866f0f14'
-      #   prod: 'ami-089c6f2e3866f0f14'
 Conditions:
   Prod: 
     !Equals
         - !Ref Environment  
         - prod 
-#small change for github testing
 Resources:
   MyInstance:
     Type: AWS::EC2::Instance
     Properties:
-      KeyName: !Ref 'KeyName'
+      #change these to !FindInMap
+      KeyName: !FindInMap ['EC2Details', !Ref Environment, !Ref KeyName]
       SubnetId: !Ref SubnetId
-      #subnet-0cc5c399dbddd3d5e
       SecurityGroupIds:
       - !Ref 'InstanceSecurityGroup'
-      UserData:
-        Fn::Base64: !Sub |
-          echo "hello world"
       InstanceType: m1.small
       AvailabilityZone: !Ref AvailabilityZone1
-      #us-east-2b
       ImageId: !FindInMap [RegionAndInstanceTypeToAMIID, !Ref "AWS::Region", !Ref Environment]
+      #is in
       UserData: 
         Fn::Base64:
           !Sub |
             #!/bin/bash -ex
-            # put your script here
-            install homebrew
-            brew install vault
+            exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
             sudo yum install -y yum-utils
             sudo yum-config-manager --add-repo https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo
             sudo yum -y install vault
       Tags:
         -
           Key: Name
-          Value: !Join ['-', [!Ref AWS::Region, Instance, 'jacob']]
+          Value: !FindInMap ['EC2Details', 'CommonDetails', 'Name']
   InstanceSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -90,5 +112,5 @@ Resources:
         Tags:
         -
           Key: Name
-          Value: !Join ['-', [!Ref AWS::Region, SecurityGroup, Jacob]]
+          Value: !Join ['-', [SecurityGroup, !Ref AWS::Region, !Ref Environment]]
 
